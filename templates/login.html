@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+{% block navbar %}
+<li class="nav-item">
+    <a class="nav-link" href="login">Login</a>
+  </li>
+    <li class="nav-item">
+        <a class="nav-link" href="signup">signup</a>
+    </li>
+{% endblock %}
+{% block content %}
+
+<h2>Login</h2>
+<form action="{{ url_for('login') }}" method="post" autocomplete="off">
+    <p>User ID:</p>
+    <input type="id" name ="user"/>
+    <p><input type="submit" class="btn btn-outline-primary" value="Submit"/></p>
+</form>
+{% endblock %}

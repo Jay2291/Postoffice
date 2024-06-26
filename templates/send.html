@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Homepage{% endblock %}
+{% block navbar %}
+<li class="nav-item active">
+  <a class="nav-link" href="home">Home <span class="sr-only">(current)</span></a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="update">update</a>
+  </li> 
+<li class="nav-item">
+    <a class="nav-link" href="logout">logout</a>
+</li>  
+{% endblock %}
+{%block content%}
+
+<p>Sender: {{un}}</p>
+<p>Address: {{add}}</p>
+<p>Phone no.: {{phone}}</p>
+
+
+
+{% endblock %}

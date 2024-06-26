@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Sign up{% endblock %}
+
+{% block navbar %}
+<li class="nav-item">
+    <a class="nav-link" href="login">Login</a>
+  </li>
+    <li class="nav-item">
+        <a class="nav-link" href="signup">signup</a>
+    </li>
+{% endblock %}
+
+{% block content %}
+<h2>Signup</h2>
+<form action="{{ url_for('signup') }}" method= "post">
+    <p>User ID:
+    <input type = 'id' , name = "userid", class="textbox" required/></p>
+    <p>User name
+    <input type = 'text' , name = "username",class="textbox" required/></p>
+    <p>Address
+    <input type = 'text' , name = "address", class="textbox" required/></p>
+    <p>Phone no.
+    <input type = 'text' , name = "Phoneno", class="textbox" required/></p>
+
+    <p><input type = "submit" class="btn btn-outline-primary" value= "Signup"></p>
+</form>
+{% endblock %}

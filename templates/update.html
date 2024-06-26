@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Update{% endblock %}
+
+{% block navbar %}
+<li class="nav-item active">
+  <a class="nav-link" href="home">Home <span class="sr-only">(current)</span></a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="update">update</a>
+  </li> 
+<li class="nav-item">
+    <a class="nav-link" href="logout">logout</a>
+</li>  
+{% endblock %}
+
+{% block content %}
+<h2>Update</h2>
+<form action="{{ url_for('update') }}" method= "post">
+    <p>User name
+    <input type = 'text' , name = "username",class="textbox" required/></p>
+    <p>Address
+    <input type = 'text' , name = "address", class="textbox" required/></p>
+    <p>Phone no.
+    <input type = 'text' , name = "Phoneno", class="textbox" required/></p>
+
+    <p><input type = "submit" class="btn btn-outline-primary" value= "Save"/></p>
+</form>
+{% endblock %}
