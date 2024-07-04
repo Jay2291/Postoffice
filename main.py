@@ -15,7 +15,7 @@ app.config['MYSQL_DB'] = 'Postoffice'
 
 mysql = MySQL(app)
 
-def update_status(parid):
+def delay_status(parid):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute(f"SELECT last_updated FROM parcel WHERE parcelid={parid}")
     row = cursor.fetchone()
@@ -24,6 +24,18 @@ def update_status(parid):
         target_time = last_updated + timedelta(seconds=random.uniform(10, 30))
         if datetime.now() >= target_time:
             return parid
+        else:
+            return 0
+
+def change_status(parid):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute(f"SELECT last_updated FROM parcel WHERE status= 'Out for delivery' and parcelid = {parid}")
+    row = cursor.fetchone()
+    if row:  
+        last_updated = row['last_updated']  
+        target_time = last_updated + timedelta(minutes=10)
+        if datetime.now() >= target_time:
+            return 1
         else:
             return 0
 
@@ -120,16 +132,12 @@ def send():
         content = request.json['content']
         phoneno = request.json['phoneno']
         postal = request.json['postid']
-
         sender_username = session.get("username", "")
-        
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        
         cursor.execute(f"SELECT userid FROM user WHERE username = '{sender_username}'")
         sender_info = cursor.fetchone()
         cursor.execute(f"SELECT userid FROM user WHERE username = '{receiver_username}'")
         receiver_info = cursor.fetchone()
-        
         if not receiver_info: #if receiverid not found in db
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             cursor.execute(f"INSERT INTO user (username, address, phoneno, postid) VALUES {receiver_username, receiver_address, phoneno, postal}")
@@ -175,7 +183,7 @@ def recievedpost():
         postid = request.json["postid"]
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         if postid == 1:
-            cursor.execute(f"SELECT * FROM parcel WHERE status = 'Left for post:1' or recieverpostid={postid}")
+            cursor.execute(f"SELECT * FROM parcel WHERE status = 'Left for post:1' or senderpostid = {postid} or recieverpostid={postid}")
         else:
             cursor.execute(f"SELECT * FROM parcel WHERE senderpostid = {postid} or recieverpostid={postid}")
         
@@ -184,7 +192,7 @@ def recievedpost():
             for i in parall:
                 parid = i['parcelid']
                 stat  = i['status']
-                res = update_status(parid)
+                res = delay_status(parid)
                 if res:
                     if stat == 'Left for post:1' and postid == 1:
                         cursor.execute(f"UPDATE parcel SET status = 'Acquired at post:{postid}' WHERE parcelid ={parid}")
@@ -214,8 +222,8 @@ def sendpost():
         if parall:
             for i in parall:
                 parid = i['parcelid']
-                recpostid = i['recieverpostid']  
-                res = update_status(parid)
+                recpostid = i['recieverpostid']
+                res = delay_status(parid)
                 if res:
                     if postid == recpostid:
                         cursor.execute(f"UPDATE parcel SET status = 'Out for delivery' WHERE parcelid ={parid} and status ='Acquired at post:{postid}'")
@@ -223,9 +231,13 @@ def sendpost():
                         cursor.execute(f"UPDATE parcel SET status = 'Left for post:{recpostid}' WHERE parcelid ={parid} and status ='Acquired at post:1'")
                     else:
                         cursor.execute(f"UPDATE parcel SET status = 'Left for post:1' WHERE parcelid ={parid} and status ='Acquired at post:{postid}'")
-                    mysql.connection.commit()  
-                cursor.execute(f"SELECT * FROM parcel WHERE parcelid = {parid} and status = 'Out for delivery' or status LIKE 'Left for post%'")
-            parcels = cursor.fetchall()     
+                    mysql.connection.commit()
+                    tim = change_status(parid)
+                    if tim:
+                        cursor.execute(f"UPDATE parcel SET status = 'Parcel returned' WHERE parcelid ={parid} and status ='Out for delivery'")
+                        mysql.connection.commit()
+                cursor.execute(f"SELECT * FROM parcel WHERE parcelid = {parid} and status = 'Out for delivery' or status LIKE 'Left for post%' or status = 'Parcel returned'")
+            parcels = cursor.fetchall()
             return jsonify({"Parcel": parcels}) if parcels else jsonify({"message": "No parcels at moment"}), 404
     else:
         return jsonify({"message": "Invalid request method"}), 405
@@ -244,8 +256,7 @@ def recieve():
                 mysql.connection.commit()
             cursor.execute(f"SELECT * FROM parcel WHERE status='Delivered' and receiverid={ui}")
             parcels = cursor.fetchall()
-            return jsonify({"Parcel": parcels}) if parcels else jsonify({"message": "No parcels delivered"}), 404
-                
+            return jsonify({"Parcel": parcels}) if parcels else jsonify({"message": "No parcels delivered"}), 404    
         else:
             return jsonify({"message": "No parcels found for this user"})
     else:
