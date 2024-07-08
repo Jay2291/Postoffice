@@ -201,7 +201,11 @@ def recievedpost():
                     else:
                         cursor.execute(f"UPDATE parcel SET status = 'Acquired at post:{postid}' WHERE parcelid ={parid} and status LIKE 'Left for post:{postid}'")
                     mysql.connection.commit()
-                cursor.execute(f"SELECT * FROM parcel WHERE status='Acquired at post:{postid}'")
+                    tim = change_status(parid)
+                    if tim:
+                        cursor.execute(f"UPDATE parcel SET status = 'Parcel returned' WHERE parcelid ={parid} and status ='Out for delivery'")
+                        mysql.connection.commit()
+                cursor.execute(f"SELECT * FROM parcel WHERE status='Acquired at post:{postid}' or status = 'Parcel returned'")
                 parcels = cursor.fetchall()
             return jsonify({"Parcel": parcels}) if parcels else jsonify({"message": "No parcels acquired"}), 404
         else:
@@ -232,11 +236,8 @@ def sendpost():
                     else:
                         cursor.execute(f"UPDATE parcel SET status = 'Left for post:1' WHERE parcelid ={parid} and status ='Acquired at post:{postid}'")
                     mysql.connection.commit()
-                    tim = change_status(parid)
-                    if tim:
-                        cursor.execute(f"UPDATE parcel SET status = 'Parcel returned' WHERE parcelid ={parid} and status ='Out for delivery'")
-                        mysql.connection.commit()
-                cursor.execute(f"SELECT * FROM parcel WHERE parcelid = {parid} and status = 'Out for delivery' or status LIKE 'Left for post%' or status = 'Parcel returned'")
+                    
+                cursor.execute(f"SELECT * FROM parcel WHERE parcelid = {parid} and status = 'Out for delivery' or status LIKE 'Left for post%'")
             parcels = cursor.fetchall()
             return jsonify({"Parcel": parcels}) if parcels else jsonify({"message": "No parcels at moment"}), 404
     else:
