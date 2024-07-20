@@ -10,7 +10,7 @@ app.secret_key = "key"
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Jayjagtap@2291'
+app.config['MYSQL_PASSWORD'] = 'YOUR_PASSWORD'
 app.config['MYSQL_DB'] = 'Postoffice'
 
 mysql = MySQL(app)
